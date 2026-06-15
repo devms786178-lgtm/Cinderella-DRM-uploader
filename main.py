@@ -95,10 +95,11 @@ if __name__ == "__main__":
 
     def run_flask():
         port = int(os.environ.get("PORT", 8000))
-        flask_app.run(host="0.0.0.0", port=port)
+        flask_app.run(host="0.0.0.0", port=port, use_reloader=False)
 
     # Start Flask in background thread so Render detects open port
-    threading.Thread(target=run_flask, daemon=True).start()
+    flask_thread = threading.Thread(target=run_flask, daemon=True)
+    flask_thread.start()
     # ──────────────────────────────────────────────────────────────────────────
 
     PRO = AFK(
@@ -133,5 +134,8 @@ if __name__ == "__main__":
                 continue
         await idle()
 
-    asyncio.get_event_loop().run_until_complete(main())
+    loop = asyncio.new_event_loop()
+    asyncio.set_event_loop(loop)
+    loop.run_until_complete(main())
+    loop.close()
     LOGGER.info(f"<---Bot Stopped--->")
