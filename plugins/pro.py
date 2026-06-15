@@ -52,6 +52,8 @@ async def Pro(bot: AFK, m: Message):
         return
 
     for i in range(num, len(nameLinks)):
+        caption_name = f"File {i+1}"
+        url = None
         try:
             name = BOT.parse_name(nameLinks[i][0])
             link = nameLinks[i][1]
