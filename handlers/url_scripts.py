@@ -241,23 +241,36 @@ class ParseLink(object):
         BC_HDR = {"BCOV-POLICY": BCOV_POLICY}
         video_response = requests.get(f"{BC_URL}/{class_id}", headers=BC_HDR)
         video = video_response.json()
-        # print(video["sources"])
+        LOGS.info(f"Brightcove response type: {type(video)}, content: {str(video)[:300]}")
+
+        # API can return a list (error) or a dict (success)
+        if isinstance(video, list):
+            # Error response from Brightcove — try to log it
+            raise ValueError(f"Brightcove API error for video {class_id}: {video}")
+
         sources = video.get("sources", [])
         video_url = None
-        # Try to find an m3u8/hls source first, then fallback to any src
+
+        # Pass 1: prefer m3u8/hls src
         for source in sources:
-            if isinstance(source, dict):
-                src = source.get("src", "")
-                if src and ("m3u8" in src or "hls" in src):
-                    video_url = src
-                    break
+            if not isinstance(source, dict):
+                continue
+            src = source.get("src", "")
+            if src and ("m3u8" in src or "hls" in src):
+                video_url = src
+                break
+
+        # Pass 2: any src
         if not video_url:
             for source in sources:
-                if isinstance(source, dict):
-                    src = source.get("src", "")
-                    if src:
-                        video_url = src
-                        break
+                if not isinstance(source, dict):
+                    continue
+                src = source.get("src", "")
+                if src:
+                    video_url = src
+                    break
+
         if not video_url:
-            raise ValueError(f"No valid source URL found in Brightcove response for video {class_id}")
+            raise ValueError(f"No valid source URL found in Brightcove response for video {class_id}: {sources}")
+
         return video_url
