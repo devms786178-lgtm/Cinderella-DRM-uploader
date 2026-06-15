@@ -134,8 +134,5 @@ if __name__ == "__main__":
                 continue
         await idle()
 
-    loop = asyncio.new_event_loop()
-    asyncio.set_event_loop(loop)
-    loop.run_until_complete(main())
-    loop.close()
+    asyncio.get_event_loop().run_until_complete(main())
     LOGGER.info(f"<---Bot Stopped--->")
