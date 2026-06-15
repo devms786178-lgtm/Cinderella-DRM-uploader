@@ -242,10 +242,22 @@ class ParseLink(object):
         video_response = requests.get(f"{BC_URL}/{class_id}", headers=BC_HDR)
         video = video_response.json()
         # print(video["sources"])
-        try:
-            video_source = video["sources"][5]
-            video_url = video_source["src"]
-        except IndexError:
-            video_source = video["sources"][1]
-            video_url = video_source["src"]
+        sources = video.get("sources", [])
+        video_url = None
+        # Try to find an m3u8/hls source first, then fallback to any src
+        for source in sources:
+            if isinstance(source, dict):
+                src = source.get("src", "")
+                if src and ("m3u8" in src or "hls" in src):
+                    video_url = src
+                    break
+        if not video_url:
+            for source in sources:
+                if isinstance(source, dict):
+                    src = source.get("src", "")
+                    if src:
+                        video_url = src
+                        break
+        if not video_url:
+            raise ValueError(f"No valid source URL found in Brightcove response for video {class_id}")
         return video_url
