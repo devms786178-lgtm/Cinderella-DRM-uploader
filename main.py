@@ -86,6 +86,21 @@ if __name__ == "__main__":
     if not os.path.isdir(Config.SESSIONS):
         os.makedirs(Config.SESSIONS)
 
+    # ─── Flask keep-alive server for Render ───────────────────────────────────
+    flask_app = Flask(__name__)
+
+    @flask_app.route('/')
+    def index():
+        return 'Bot is running!'
+
+    def run_flask():
+        port = int(os.environ.get("PORT", 8000))
+        flask_app.run(host="0.0.0.0", port=port)
+
+    # Start Flask in background thread so Render detects open port
+    threading.Thread(target=run_flask, daemon=True).start()
+    # ──────────────────────────────────────────────────────────────────────────
+
     PRO = AFK(
         "AFK-DL",
         bot_token=Config.BOT_TOKEN,
@@ -120,19 +135,3 @@ if __name__ == "__main__":
 
     asyncio.get_event_loop().run_until_complete(main())
     LOGGER.info(f"<---Bot Stopped--->")
-
-# ─── Flask keep-alive server for Render ───────────────────────────────────────
-flask_app = Flask(name)
-
-@flask_app.route('/')
-def index():
-    return 'Bot is running!'
-
-def run_flask():
-    port = int(os.environ.get("PORT", 8000))
-    flask_app.run(host="0.0.0.0", port=port)
-
-# Start Flask in background thread so Render detects open port
-threading.Thread(target=run_flask, daemon=True).start()
-# ─────────────────────────────────────────
-
